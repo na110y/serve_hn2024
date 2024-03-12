@@ -1,7 +1,19 @@
 const express = require('express');
 const cors = require('cors');
-
+const mysql = require('mysql2');
 const Pusher = require('pusher');
+
+require('dotenv').config();
+
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  port: process.env.DB_PORT,
+  waitForConnections: true,
+  queueLimit: 0
+});
 
 const pusher = new Pusher({
   appId: "1770077",
@@ -11,6 +23,9 @@ const pusher = new Pusher({
   useTLS: true
 });
 
+
+
+
 const app = express();
 
 app.use(cors({
@@ -19,16 +34,31 @@ app.use(cors({
 
 app.use(express.json())
 
-
 app.post('/api/messages', async (req, res) => {
+  const { username, message } = req.body;
+
+    // // Lưu dữ liệu vào bảng user_message trong cơ sở dữ liệu hn_2024
+    // connection.query(
+    //   'INSERT INTO user_message (username, message) VALUES (?, ?)',
+    //   [username, message],
+    //   (error, results, fields) => {
+    //     if (error) {
+    //       console.error('Error inserting into user_message:', error.stack);
+    //       return res.status(500).json({ error: 'Error inserting into user_message' });
+    //     }
+  
+    //     console.log('Inserted into user_message table:', results);
+    //   }
+    // );
+
   await pusher.trigger("chat", "message", {
-    username: req.body.username,
-    message: req.body.message,
+    username,
+    message,
   });
 
   res.json([]);
-})
+});
 
-app.listen(3000)
+app.listen(8080)
 
 
