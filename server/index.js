@@ -62,20 +62,22 @@ app.get('/api/get-messages', (req, res) => {
 });
 
 app.post('/api/messages', async (req, res) => {
-  const { username, message } = req.body;
+  const { username, message, user_id } = req.body;
 
   await pusher.trigger("chat", "message", {
     username,
     message,
+    user_id
   });
 
   io.emit('message', {
     username,
     message,
+    user_id
   });
 
-  const sql = "INSERT INTO user_message (username, message) VALUES (?, ?)";
-  connection.query(sql, [username, message], function (err, result) {
+  const sql = "INSERT INTO user_message (username, message, user_id) VALUES (?, ?, ?)";
+  connection.query(sql, [username, message, user_id], function (err, result) {
     if (err) {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
