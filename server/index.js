@@ -1,32 +1,34 @@
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const cors = require('cors');
+
+const Pusher = require('pusher');
+
+const pusher = new Pusher({
+  appId: "1770077",
+  key: "0624ad209e23f1ff966f",
+  secret: "75f23fc257698b21424d",
+  cluster: "eu",
+  useTLS: true
+});
 
 const app = express();
-const server = http.createServer(app);
 
-const io = socketIo(server, {
-  perMessageDeflate: false,
-});
+app.use(cors({
+  origin : ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:4200']
+}))
 
-io.on('connection', (socket) => {
-  console.log('A user connected');
+app.use(express.json())
 
-  // Xử lý tin nhắn chat
-  socket.on('chatMessage', (message) => {
-    console.log('Message from client:', message);
 
-    // Gửi lại tin nhắn cho tất cả các client khác
-    io.emit('chatMessage', message);
+app.post('/api/messages', async (req, res) => {
+  await pusher.trigger("chat", "message", {
+    username: req.body.username,
+    message: req.body.message,
   });
 
-  // Xử lý sự kiện disconnect
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
-});
+  res.json([]);
+})
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(3000)
+
+
